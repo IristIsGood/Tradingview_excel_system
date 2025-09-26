@@ -1,0 +1,17 @@
+# Copy this file to .env and fill in your API credentials
+
+# MEXC API credentials (required for MEXC)
+API_KEY=your_mexc_api_key_here
+API_SECRET=your_mexc_api_secret_here
+
+# Binance API credentials (optional, for future use)
+# BINANCE_API_KEY=your_binance_api_key_here
+# BINANCE_API_SECRET=your_binance_api_secret_here
+
+# Gate.io API credentials (optional, for future use)
+# GATE_API_KEY=your_gate_api_key_here
+# GATE_API_SECRET=your_gate_api_secret_here
+
+# Bybit API credentials (optional, for future use)
+# BYBIT_API_KEY=your_bybit_api_key_here
+# BYBIT_API_SECRET=your_bybit_api_secret_here
