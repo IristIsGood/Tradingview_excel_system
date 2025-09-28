@@ -1,5 +1,7 @@
 import os
+import sys
 import time
+import platform
 import streamlit as st
 import pandas as pd
 from dotenv import load_dotenv
@@ -22,6 +24,39 @@ def main():
     st.set_page_config(page_title="RSI Downloader", layout="wide")
     st.title("RSI Downloader - Multi Exchange Support")
     
+    # Debug information
+    with st.expander("🔍 Debug Information", expanded=False):
+        st.write("**Environment Details:**")
+        st.write(f"- Python Version: {sys.version}")
+        st.write(f"- Streamlit Version: {st.__version__}")
+        st.write(f"- Platform: {platform.platform()}")
+        st.write(f"- Working Directory: {os.getcwd()}")
+        st.write(f"- Environment Variables:")
+        for key in ['STREAMLIT_SERVER_HEADLESS', 'STREAMLIT_SERVER_PORT', 'STREAMLIT_SERVER_ADDRESS']:
+            st.write(f"  - {key}: {os.environ.get(key, 'Not set')}")
+        
+        st.write("**Network Test:**")
+        try:
+            import requests
+            test_url = "https://httpbin.org/get"
+            resp = requests.get(test_url, timeout=10)
+            st.write(f"- HTTP Test: ✅ Success (Status: {resp.status_code})")
+        except Exception as e:
+            st.write(f"- HTTP Test: ❌ Failed - {e}")
+        
+        st.write("**Exchange API Test:**")
+        for exchange in ["Binance", "Bybit"]:
+            try:
+                if exchange == "Binance":
+                    test_url = "https://api.binance.com/api/v3/ping"
+                elif exchange == "Bybit":
+                    test_url = "https://api.bybit.com/v5/market/time"
+                
+                resp = requests.get(test_url, timeout=10)
+                st.write(f"- {exchange} API: ✅ Success (Status: {resp.status_code})")
+            except Exception as e:
+                st.write(f"- {exchange} API: ❌ Failed - {e}")
+    
     # Add sidebar for output management
     with st.sidebar:
         st.subheader("📁 Output Management")
@@ -43,6 +78,21 @@ def main():
                     st.write(f"• {file}")
         else:
             st.write("📁 Output folder: Empty")
+        
+        st.subheader("🧪 Debug Tools")
+        if st.button("🔍 Test Symbol Loading"):
+            st.write("Testing symbol loading for all exchanges...")
+            for exchange in ["MEXC", "Binance", "Gate", "Bybit"]:
+                with st.spinner(f"Testing {exchange}..."):
+                    try:
+                        symbols = get_exchange_symbols(exchange)
+                        st.write(f"✅ {exchange}: {len(symbols)} symbols")
+                        if symbols:
+                            st.write(f"  First 3: {symbols[:3]}")
+                    except Exception as e:
+                        st.write(f"❌ {exchange}: Error - {e}")
+                        import traceback
+                        st.code(traceback.format_exc())
 
     # Exchange selection
     exchange = st.selectbox("Exchange", ["MEXC", "Binance", "Gate", "Bybit"], index=0)

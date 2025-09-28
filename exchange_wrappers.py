@@ -38,35 +38,104 @@ except ImportError as e:
 
 def get_exchange_symbols(exchange: str) -> List[str]:
     """Get all USDT symbols for the specified exchange."""
+    print(f"🔍 [DEBUG] Starting symbol fetch for {exchange}")
+    print(f"🔍 [DEBUG] Environment: {os.environ.get('STREAMLIT_SERVER_HEADLESS', 'Not set')}")
+    
     if exchange == "MEXC":
+        print(f"🔍 [DEBUG] MEXC: Using local module")
         if get_mexc_symbols is None:
+            print(f"❌ [DEBUG] MEXC: Module not available")
             return []
-        return get_mexc_symbols()
+        try:
+            symbols = get_mexc_symbols()
+            print(f"✅ [DEBUG] MEXC: Found {len(symbols)} symbols")
+            return symbols
+        except Exception as e:
+            print(f"❌ [DEBUG] MEXC: Error - {e}")
+            return []
+            
     elif exchange == "Binance":
-        # Binance doesn't need API key for public data
+        print(f"🔍 [DEBUG] Binance: Starting HTTP request")
         import requests
         url = "https://api.binance.com/api/v3/exchangeInfo"
-        resp = requests.get(url, timeout=30)
-        if resp.status_code == 200:
-            data = resp.json()
-            symbols = [s['symbol'] for s in data.get('symbols', []) if s.get('status') == 'TRADING']
-            return [s for s in symbols if s.endswith('USDT')]
-        return []
-    elif exchange == "Gate":
-        if get_all_spot_pairs_gateio is None:
+        print(f"🔍 [DEBUG] Binance: URL = {url}")
+        
+        try:
+            print(f"🔍 [DEBUG] Binance: Making request...")
+            resp = requests.get(url, timeout=30)
+            print(f"🔍 [DEBUG] Binance: Response status = {resp.status_code}")
+            print(f"🔍 [DEBUG] Binance: Response headers = {dict(resp.headers)}")
+            
+            if resp.status_code == 200:
+                print(f"🔍 [DEBUG] Binance: Parsing JSON response...")
+                data = resp.json()
+                print(f"🔍 [DEBUG] Binance: Response keys = {list(data.keys()) if isinstance(data, dict) else 'Not a dict'}")
+                
+                symbols = [s['symbol'] for s in data.get('symbols', []) if s.get('status') == 'TRADING']
+                usdt_symbols = [s for s in symbols if s.endswith('USDT')]
+                print(f"✅ [DEBUG] Binance: Found {len(usdt_symbols)} USDT symbols")
+                return usdt_symbols
+            else:
+                print(f"❌ [DEBUG] Binance: HTTP error {resp.status_code}")
+                print(f"❌ [DEBUG] Binance: Response text = {resp.text[:500]}")
+                return []
+        except Exception as e:
+            print(f"❌ [DEBUG] Binance: Exception - {e}")
+            print(f"❌ [DEBUG] Binance: Exception type - {type(e)}")
+            import traceback
+            print(f"❌ [DEBUG] Binance: Traceback - {traceback.format_exc()}")
             return []
-        return get_all_spot_pairs_gateio()
+            
+    elif exchange == "Gate":
+        print(f"🔍 [DEBUG] Gate: Using local module")
+        if get_all_spot_pairs_gateio is None:
+            print(f"❌ [DEBUG] Gate: Module not available")
+            return []
+        try:
+            symbols = get_all_spot_pairs_gateio()
+            print(f"✅ [DEBUG] Gate: Found {len(symbols)} symbols")
+            return symbols
+        except Exception as e:
+            print(f"❌ [DEBUG] Gate: Error - {e}")
+            import traceback
+            print(f"❌ [DEBUG] Gate: Traceback - {traceback.format_exc()}")
+            return []
+            
     elif exchange == "Bybit":
-        # Bybit public endpoint for instruments
+        print(f"🔍 [DEBUG] Bybit: Starting HTTP request")
         import requests
         url = "https://api.bybit.com/v5/market/instruments-info"
         params = {"category": "spot"}
-        resp = requests.get(url, params=params, timeout=30)
-        if resp.status_code == 200:
-            data = resp.json()
-            symbols = [item['symbol'] for item in data.get('result', {}).get('list', [])]
-            return [s for s in symbols if s.endswith('USDT')]
-        return []
+        print(f"🔍 [DEBUG] Bybit: URL = {url}")
+        print(f"🔍 [DEBUG] Bybit: Params = {params}")
+        
+        try:
+            print(f"🔍 [DEBUG] Bybit: Making request...")
+            resp = requests.get(url, params=params, timeout=30)
+            print(f"🔍 [DEBUG] Bybit: Response status = {resp.status_code}")
+            print(f"🔍 [DEBUG] Bybit: Response headers = {dict(resp.headers)}")
+            
+            if resp.status_code == 200:
+                print(f"🔍 [DEBUG] Bybit: Parsing JSON response...")
+                data = resp.json()
+                print(f"🔍 [DEBUG] Bybit: Response keys = {list(data.keys()) if isinstance(data, dict) else 'Not a dict'}")
+                
+                symbols = [item['symbol'] for item in data.get('result', {}).get('list', [])]
+                usdt_symbols = [s for s in symbols if s.endswith('USDT')]
+                print(f"✅ [DEBUG] Bybit: Found {len(usdt_symbols)} USDT symbols")
+                return usdt_symbols
+            else:
+                print(f"❌ [DEBUG] Bybit: HTTP error {resp.status_code}")
+                print(f"❌ [DEBUG] Bybit: Response text = {resp.text[:500]}")
+                return []
+        except Exception as e:
+            print(f"❌ [DEBUG] Bybit: Exception - {e}")
+            print(f"❌ [DEBUG] Bybit: Exception type - {type(e)}")
+            import traceback
+            print(f"❌ [DEBUG] Bybit: Traceback - {traceback.format_exc()}")
+            return []
+    
+    print(f"❌ [DEBUG] Unknown exchange: {exchange}")
     return []
 
 def get_single_batch_klines(exchange: str, symbol: str, interval: str, limit: int = 1000, 
