@@ -1,6 +1,6 @@
 # 🚀 RSI Downloader - Koyeb Deployment
 
-This guide shows how to deploy the RSI Downloader to Koyeb cloud platform.
+This guide shows how to deploy the RSI Downloader to Koyeb using Docker.
 
 ## 🚀 Quick Deployment
 
@@ -11,7 +11,9 @@ This guide shows how to deploy the RSI Downloader to Koyeb cloud platform.
 ### Step 1: Prepare Your Repository
 
 Make sure your repository has:
+- `Dockerfile` (already created)
 - `Procfile` (already created)
+- `start.sh` (already created)
 - `requirements.txt` (already created)
 - `.env` file with your API keys (create this)
 
@@ -39,7 +41,22 @@ BYBIT_API_SECRET=your_bybit_secret
 
 ### Step 3: Deploy to Koyeb
 
-#### Option A: Using Koyeb CLI
+#### Option A: Using Koyeb Dashboard
+
+1. Go to [Koyeb Dashboard](https://app.koyeb.com/)
+2. Click "Create Service"
+3. Choose "GitHub" as source
+4. Select your repository: `MeowIrist/Tradingview_excel`
+5. Set branch to `main`
+6. Choose "Docker" as runtime
+7. Configure environment variables:
+   - `STREAMLIT_SERVER_ADDRESS=0.0.0.0`
+   - `STREAMLIT_SERVER_HEADLESS=true`
+   - `STREAMLIT_BROWSER_GATHER_USAGE_STATS=false`
+8. Add your API keys as environment variables
+9. Click "Deploy"
+
+#### Option B: Using Koyeb CLI
 
 ```bash
 # Install Koyeb CLI
@@ -53,26 +70,11 @@ koyeb service create \
   --name rsi-downloader \
   --git github.com/MeowIrist/Tradingview_excel \
   --git-branch main \
-  --ports 8080:http \
-  --env STREAMLIT_SERVER_PORT=8080 \
+  --dockerfile Dockerfile \
   --env STREAMLIT_SERVER_ADDRESS=0.0.0.0 \
-  --env STREAMLIT_SERVER_HEADLESS=true
+  --env STREAMLIT_SERVER_HEADLESS=true \
+  --env STREAMLIT_BROWSER_GATHER_USAGE_STATS=false
 ```
-
-#### Option B: Using Koyeb Dashboard
-
-1. Go to [Koyeb Dashboard](https://app.koyeb.com/)
-2. Click "Create Service"
-3. Choose "GitHub" as source
-4. Select your repository: `MeowIrist/Tradingview_excel`
-5. Set branch to `main`
-6. Configure environment variables:
-   - `STREAMLIT_SERVER_PORT=8080`
-   - `STREAMLIT_SERVER_ADDRESS=0.0.0.0`
-   - `STREAMLIT_SERVER_HEADLESS=true`
-   - `STREAMLIT_BROWSER_GATHER_USAGE_STATS=false`
-7. Add your API keys as environment variables
-8. Click "Deploy"
 
 ### Step 4: Access Your App
 
@@ -83,19 +85,26 @@ https://your-service-name.koyeb.app
 
 ## 🔧 Configuration
 
+### Dockerfile Features
+- **Base Image**: Python 3.11 slim
+- **Dependencies**: All required packages installed
+- **Port**: Dynamic port assignment via `$PORT` environment variable
+- **Health Check**: Built-in Streamlit health endpoint
+- **Output Directory**: Created for Excel file storage
+
 ### Procfile
 The `Procfile` tells Koyeb how to run your application:
 ```
-web: streamlit run app.py --server.port=$PORT --server.address=0.0.0.0
+web: ./start.sh
 ```
 
 ### Environment Variables
 Set these in Koyeb dashboard or CLI:
 
 **Required:**
-- `STREAMLIT_SERVER_PORT=8080`
 - `STREAMLIT_SERVER_ADDRESS=0.0.0.0`
 - `STREAMLIT_SERVER_HEADLESS=true`
+- `STREAMLIT_BROWSER_GATHER_USAGE_STATS=false`
 
 **API Keys (add your actual keys):**
 - `MEXC_API_KEY=your_mexc_key`
@@ -135,11 +144,7 @@ koyeb service get rsi-downloader
 **Solution:** Make sure you have a `Procfile` in your repository root.
 
 #### 2. Port Issues
-**Solution:** Ensure your app uses the `$PORT` environment variable:
-```python
-# In your app.py, use:
-port = int(os.environ.get("PORT", 8080))
-```
+**Solution:** The Dockerfile and startup script handle dynamic port assignment automatically.
 
 #### 3. Environment Variables Not Loading
 **Solution:** Set environment variables in Koyeb dashboard:
@@ -214,12 +219,6 @@ koyeb service delete rsi-downloader
 
 # Or delete via dashboard
 ```
-
-## 📞 Support
-
-- **Koyeb Documentation**: [Koyeb Docs](https://www.koyeb.com/docs)
-- **Koyeb Support**: [Support](https://www.koyeb.com/support)
-- **GitHub Issues**: Check your repository issues
 
 ---
 

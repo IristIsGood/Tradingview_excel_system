@@ -54,7 +54,6 @@ output/
 *.csv
 test_*.py
 debug_*.py
-install_dependencies.py
 
 # Documentation
 README.md
@@ -65,7 +64,3 @@ docs/
 Dockerfile
 docker-compose.yml
 .dockerignore
-
-# Logs
-*.log
-logs/
