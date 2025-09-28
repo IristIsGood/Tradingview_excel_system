@@ -4,4 +4,8 @@ requests
 ta
 openpyxl
 python-dotenv
+gate-api
+ccxt
+tradingview_ta
+pandas_ta
 

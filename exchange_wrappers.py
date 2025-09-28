@@ -25,10 +25,21 @@ except ImportError as e:
 
 try:
     from gateio_ver import get_all_spot_pairs_gateio, get_gateio_single_batch_klines
+    print("✅ Gate.io module imported successfully")
 except ImportError as e:
-    print(f"Warning: Could not import Gate.io module: {e}")
-    get_all_spot_pairs_gateio = None
-    get_gateio_single_batch_klines = None
+    print(f"⚠️ Warning: Could not import Gate.io module: {e}")
+    print("💡 Installing missing dependencies...")
+    try:
+        import subprocess
+        import sys
+        subprocess.check_call([sys.executable, "-m", "pip", "install", "gate-api"])
+        print("✅ Gate.io dependencies installed, retrying import...")
+        from gateio_ver import get_all_spot_pairs_gateio, get_gateio_single_batch_klines
+        print("✅ Gate.io module imported successfully after installation")
+    except Exception as install_error:
+        print(f"❌ Failed to install Gate.io dependencies: {install_error}")
+        get_all_spot_pairs_gateio = None
+        get_gateio_single_batch_klines = None
 
 try:
     from bybit_ver import get_bybit_single_batch_klines
@@ -87,19 +98,40 @@ def get_exchange_symbols(exchange: str) -> List[str]:
             return []
             
     elif exchange == "Gate":
-        print(f"🔍 [DEBUG] Gate: Using local module")
+        print(f"🔍 [DEBUG] Gate: Starting symbol fetch")
         if get_all_spot_pairs_gateio is None:
-            print(f"❌ [DEBUG] Gate: Module not available")
-            return []
-        try:
-            symbols = get_all_spot_pairs_gateio()
-            print(f"✅ [DEBUG] Gate: Found {len(symbols)} symbols")
-            return symbols
-        except Exception as e:
-            print(f"❌ [DEBUG] Gate: Error - {e}")
-            import traceback
-            print(f"❌ [DEBUG] Gate: Traceback - {traceback.format_exc()}")
-            return []
+            print(f"⚠️ [DEBUG] Gate: SDK module not available, trying HTTP fallback")
+            try:
+                # HTTP fallback for Gate.io
+                import requests
+                url = "https://api.gateio.ws/api/v4/spot/currency_pairs"
+                print(f"🔍 [DEBUG] Gate: HTTP fallback URL = {url}")
+                
+                resp = requests.get(url, timeout=30)
+                print(f"🔍 [DEBUG] Gate: HTTP response status = {resp.status_code}")
+                
+                if resp.status_code == 200:
+                    data = resp.json()
+                    symbols = [pair['id'] for pair in data if pair.get('quote') == 'USDT' and pair.get('trade_status') == 'tradable']
+                    print(f"✅ [DEBUG] Gate: HTTP fallback found {len(symbols)} symbols")
+                    return symbols
+                else:
+                    print(f"❌ [DEBUG] Gate: HTTP fallback failed with status {resp.status_code}")
+                    return []
+            except Exception as e:
+                print(f"❌ [DEBUG] Gate: HTTP fallback error - {e}")
+                return []
+        else:
+            print(f"🔍 [DEBUG] Gate: Using SDK module")
+            try:
+                symbols = get_all_spot_pairs_gateio()
+                print(f"✅ [DEBUG] Gate: SDK found {len(symbols)} symbols")
+                return symbols
+            except Exception as e:
+                print(f"❌ [DEBUG] Gate: SDK error - {e}")
+                import traceback
+                print(f"❌ [DEBUG] Gate: SDK traceback - {traceback.format_exc()}")
+                return []
             
     elif exchange == "Bybit":
         print(f"🔍 [DEBUG] Bybit: Starting HTTP request")
