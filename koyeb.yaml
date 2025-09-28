@@ -1,0 +1,33 @@
+# Koyeb deployment configuration for RSI Downloader
+name: rsi-downloader
+services:
+  - name: rsi-downloader
+    source:
+      type: git
+      repository: https://github.com/MeowIrist/Tradingview_excel.git
+      branch: main
+    ports:
+      - port: 8080
+        http:
+          paths:
+            - path: /
+    env:
+      - name: STREAMLIT_SERVER_ADDRESS
+        value: "0.0.0.0"
+      - name: STREAMLIT_SERVER_HEADLESS
+        value: "true"
+      - name: STREAMLIT_BROWSER_GATHER_USAGE_STATS
+        value: "false"
+    healthcheck:
+      http:
+        path: /_stcore/health
+      initial_delay: 30s
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    resources:
+      cpu: 1000m
+      memory: 2Gi
+    scaling:
+      min_replicas: 1
+      max_replicas: 3
