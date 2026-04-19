@@ -1,3 +1,4 @@
+from symbol_combiner_page import symbol_combiner_page
 import os
 import sys
 import time
@@ -21,8 +22,14 @@ os.makedirs(OUTPUT_DIR, exist_ok=True)
 load_dotenv()
 
 def main():
+
     st.set_page_config(page_title="RSI Downloader", layout="wide")
     st.title("RSI Downloader - Multi Exchange Support")
+
+    page = st.sidebar.radio("Navigation", ["RSI Downloader", "Symbol Combiner"])
+    if page == "Symbol Combiner":
+        symbol_combiner_page()
+        st.stop()
     
     # Debug information
     with st.expander("🔍 Debug Information", expanded=False):
